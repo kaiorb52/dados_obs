@@ -1,5 +1,5 @@
-
 library(dplyr)
+library(sf)
 library(leaflet)
 library(plotly)
 
@@ -10,7 +10,7 @@ substituir_nan_inf <- function(df) {
 
 # -------------------------------------------------------------------------
 
-dados_rj <- readRDS("~/git/dados_obs/data/dados_rj.rds")
+dados_rj <- readRDS("dados_rj.rds")
 
 dados_rj <- dados_rj %>%
   select(ano, municipio, carga_tributaria, depedencia_petroleo, gasto_sociais, gasto_urbanos) %>%
@@ -18,7 +18,7 @@ dados_rj <- dados_rj %>%
 
 # -------------------------------------------------------------------------
 
-geo_br <- readRDS("~/git/dados_obs/data/geo_br.rds")
+geo_br <- readRDS("geo_br.rds")
 
 geo_br$name_muni <- tolower(geo_br$name_muni)
 geo_br$name_muni <- stringi::stri_trans_general(geo_br$name_muni, 'latin-ascii')

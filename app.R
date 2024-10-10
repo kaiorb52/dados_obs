@@ -2,8 +2,7 @@ library(shiny)
 library(leaflet)
 library(shinythemes)
 
-setwd("/home/kaio/git/dados_obs")
-source("src/dados.R")
+source("dados.R")
 
 ui <- fluidPage(
   theme = shinytheme("sandstone"),
