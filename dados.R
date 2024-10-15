@@ -15,7 +15,7 @@ substituir_nan_inf <- function(df) {
 dados_rj <- readRDS("dados_rj.rds")
 geo_br <- readRDS("geo_br.rds")
 
-Dados_Populacionais_Censo <- readRDS("~/git/dados_obs/Dados_Populacionais_Censo.rds")
+Dados_Populacionais_Censo <- readRDS("Dados_Populacionais_Censo.rds")
 
 # 1. Fiscal ================================================================
 
@@ -89,6 +89,7 @@ dados_censo <- Dados_Populacionais_Censo |>
 # dados_censo$POP_65mais
 
 demo_vars <- names(dados_censo)
+demo_vars <- demo_vars[-c(1, 2)]
 
 dados_censo2 <- left_join(geo_br, dados_censo, by = c("code_muni" = "Cod_07"))
 

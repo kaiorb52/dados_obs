@@ -1,6 +1,8 @@
+
 library(shiny)
 library(leaflet)
 library(shinythemes)
+library(tidyr)
 
 source("dados.R")
 
@@ -149,9 +151,7 @@ server <- function(input, output, session) {
     )
   })
   
-  
 }
 
-library(tidyr)
 
 shinyApp(ui = ui, server = server)

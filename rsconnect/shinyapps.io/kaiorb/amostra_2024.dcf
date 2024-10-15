@@ -5,7 +5,7 @@ account: kaiorb
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12975258
-bundleId: 9204510
+bundleId: 9225165
 url: https://kaiorb.shinyapps.io/amostra_2024/
 version: 1
 asMultiple: FALSE
