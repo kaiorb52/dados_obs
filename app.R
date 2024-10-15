@@ -6,30 +6,36 @@ source("dados.R")
 
 ui <- fluidPage(
   theme = shinytheme("sandstone"),
-  
   navbarPage(
     title = "Observatorio das Metropoles",
     tabPanel(
-      title = "Fiscais", 
+      title = "Fiscal", 
       sidebarLayout(
         sidebarPanel(
           selectInput("variavel", "Escolher indicador", choices = c(choice_var)),
-          selectInput("municipio_selected", "Municipio", choices = c(municipios)),
-          sliderInput(
-            label = "Ano",
-            inputId = "ano_selected",
-            value = median(anos),
-            min = min(anos),
-            max = max(anos)
+          conditionalPanel(
+            condition = "input.graph_tabs_fiscal == 'Grafico'",
+            selectInput("municipio_selected", "Municipio", choices = c(municipios)),
+          ),
+          conditionalPanel(
+            condition = "input.graph_tabs_fiscal == 'Mapa'",
+            sliderInput(
+              label = "Ano",
+              inputId = "ano_selected",
+              value = median(anos),
+              min = min(anos),
+              max = max(anos)
+            )
           )
         ),
         mainPanel(
           tabsetPanel(
-            tabPanel("Grafico Longitudinal",
-              uiOutput("graph")  # Corrigido para 'plotlyOutput'
+            id = "graph_tabs_fiscal",
+            tabPanel("Grafico",
+              uiOutput("graph") 
             ),
             tabPanel("Mapa",
-             leafletOutput("map")
+             leafletOutput("finbra_map")
             ),
             tabPanel("Tabela",
               DT::dataTableOutput("view_table")
@@ -39,8 +45,34 @@ ui <- fluidPage(
       )
     ),
     tabPanel(
-      title = "Demograficos"
+      title = "Demografia",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("demo_var_selected", "Escolher indicador", choices = c(demo_vars)),
+          selectInput("demo_ano_selected", "Ano", choices = c(2010, 2022)),
+        ),
+        mainPanel(
+          tabsetPanel(
+            tabPanel("Mapa",
+              leafletOutput("demo_map")
+            )
+          )
+        )
+      )
     )
+    # tabPanel(
+    #   title = "Segurança pública",
+    #   sidebarLayout(
+    #     sidebarPanel(
+    #     ),
+    #     mainPanel(
+    #       tabsetPanel(
+    #         tabPanel("Mapa",
+    #         )
+    #       )
+    #     )
+    #   )
+    # )
   )
 )
 
@@ -65,7 +97,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$map <- renderLeaflet({
+  output$finbra_map <- renderLeaflet({
     dados_filtrados <- subset(geo_br_dados, ano == input$ano_selected)
     
     pal <- colorNumeric(palette = "RdYlGn", domain = dados_filtrados[[input$variavel]])
@@ -95,6 +127,28 @@ server <- function(input, output, session) {
       pivot_wider(names_from = name, values_from = value)
     
   })
+  
+  output$demo_map <- renderLeaflet({
+    
+    censo_filtrado <- subset(dados_censo2, ano == input$demo_ano_selected)
+    
+    pal <- colorNumeric(palette = "RdYlGn", domain = censo_filtrado[[input$demo_var_selected]])
+    
+    leaflet(data = censo_filtrado) %>%
+      addProviderTiles(providers$CartoDB.DarkMatter) |>  # Mapa de fundo escuro
+      addPolygons(
+        fillColor = ~pal(censo_filtrado[[input$demo_var_selected]]), # Preenchimento baseado na variável
+        fillOpacity = 1.0,
+        weight = 0.2,
+        smoothFactor = 0.2) %>%
+      addLegend(
+        pal = pal,
+        values = censo_filtrado[[input$demo_var_selected]],
+        position = "bottomright",
+        title = input$demo_var_selected
+    )
+  })
+  
   
 }
 
