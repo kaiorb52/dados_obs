@@ -51,12 +51,24 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           selectInput("demo_var_selected", "Escolher indicador", choices = c(demo_vars)),
-          selectInput("demo_ano_selected", "Ano", choices = c(2010, 2022)),
+          conditionalPanel(
+            condition = "input.demo_tabs == 'Mapa'",
+            selectInput("demo_ano_selected", "Ano", choices = c(2010, 2022)),
+          ),
+          conditionalPanel(
+            condition = "input.demo_tabs == 'Grafico'",
+            selectInput("demo_mun_selected", "Municipio", choices = c(municipios)),
+          )
         ),
         mainPanel(
           tabsetPanel(
+            id = "demo_tabs",
+            tabPanel("Grafico"
+            ),
             tabPanel("Mapa",
               leafletOutput("demo_map")
+            ),
+            tabPanel("Tabela"
             )
           )
         )
