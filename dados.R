@@ -17,13 +17,16 @@ geo_br <- readRDS("geo_br.rds")
 
 Dados_Populacionais_Censo <- readRDS("Dados_Populacionais_Censo.rds")
 
+codigos <- data.table::fread("codigos_municipios.csv")
+
+
 # 1. Fiscal ================================================================
 
 dados_rj <- dados_rj %>%
   select(ano, municipio, carga_tributaria, depedencia_petroleo, gasto_sociais, gasto_urbanos) %>%
   substituir_nan_inf()
 
-geo_br$name_muni <- tolower(geo_br$name_muni)
+geo_br$nibge7geo_br$name_muni <- tolower(geo_br$name_muni)
 geo_br$name_muni <- stringi::stri_trans_general(geo_br$name_muni, 'latin-ascii')
 
 anos <- 2004:2023
@@ -80,7 +83,12 @@ dados_censo <- Dados_Populacionais_Censo |>
     PERC_65mais = (POP_04a14 / (POP_04a14 + POP_15a24 + POP_25a49 + POP_50a64 + POP_65mais)) * 100
   ) |> 
   mutate(PERC_Indigenas = coalesce(PERC_Indigena, PERC_Indigenas)) |> 
-  select(ano, Cod_07, contains("PERC"), -PERC_Indigena, TAXA_Hab_per_Domi)
+  left_join(codigos,  by = c("Cod_07" = "ibge7")) |> 
+  select(ano, Cod_07, nome_municipio, contains("PERC"), -PERC_Indigena, TAXA_Hab_per_Domi)
+
+dados_censo$nome_municipio <- tolower(dados_censo$nome_municipio)
+
+nome_muns_demo <- unique(dados_censo$nome_municipio)
 
 # dados_censo$per
 # dados_censo$POP_15a24
@@ -89,7 +97,6 @@ dados_censo <- Dados_Populacionais_Censo |>
 # dados_censo$POP_65mais
 
 demo_vars <- names(dados_censo)
-demo_vars <- demo_vars[-c(1, 2)]
+demo_vars <- demo_vars[-c(1, 2, 3)]
 
 dados_censo2 <- left_join(geo_br, dados_censo, by = c("code_muni" = "Cod_07"))
-

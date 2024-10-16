@@ -34,7 +34,7 @@ ui <- fluidPage(
           tabsetPanel(
             id = "graph_tabs_fiscal",
             tabPanel("Grafico",
-              uiOutput("graph") 
+              plotOutput("demo_graph")
             ),
             tabPanel("Mapa",
              leafletOutput("finbra_map")
@@ -51,17 +51,32 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           selectInput("demo_var_selected", "Escolher indicador", choices = c(demo_vars)),
-          selectInput("demo_ano_selected", "Ano", choices = c(2010, 2022)),
+          conditionalPanel(
+            condition = "input.demo_tab == 'Grafico'",
+            selectInput("demo_municipio_selected", "Municipio", choices = c(nome_muns_demo))
+          ),
+          conditionalPanel(
+            condition = "input.demo_tab == 'Mapa'",
+            selectInput("demo_ano_selected", "Ano", choices = c(2010, 2022))
+          )
         ),
         mainPanel(
           tabsetPanel(
+            id = "demo_tab",
+            tabPanel("Grafico",
+              plotOutput("demo_graph")
+            ),
             tabPanel("Mapa",
               leafletOutput("demo_map")
+            ),
+            tabPanel("Tabela",
+              DT::dataTableOutput("demo_table")
             )
           )
         )
       )
     )
+    
     # tabPanel(
     #   title = "Segurança pública",
     #   sidebarLayout(
@@ -105,9 +120,9 @@ server <- function(input, output, session) {
     pal <- colorNumeric(palette = "RdYlGn", domain = dados_filtrados[[input$variavel]])
     
     leaflet(data = dados_filtrados) %>%
-      addProviderTiles(providers$CartoDB.DarkMatter) |>  # Mapa de fundo escuro
+      addProviderTiles(providers$CartoDB.DarkMatter) |> 
       addPolygons(
-        fillColor = ~pal(dados_filtrados[[input$variavel]]), # Preenchimento baseado na variável
+        fillColor = ~pal(dados_filtrados[[input$variavel]]),
         fillOpacity = 1.0,
         weight = 0.2,
         smoothFactor = 0.2) %>%
@@ -117,9 +132,11 @@ server <- function(input, output, session) {
         position = "bottomright",
         title = input$variavel
       )  
+  
   })
   
   output$view_table <- DT::renderDataTable({
+    
     dados_rj |> 
       pivot_longer(cols = carga_tributaria:gasto_urbanos) |> 
       mutate(
@@ -128,6 +145,17 @@ server <- function(input, output, session) {
       ) |> 
       pivot_wider(names_from = name, values_from = value)
     
+  })
+  
+  output$demo_graph <- renderPlotly({
+    
+    p <- dados_censo |>
+      filter(nome_municipio == input$demo_municipio_selected) |> 
+      ggplot(aes(x = as.character(ano), y = !!sym(input$demo_var_selected))) +
+      geom_col() +
+      ggthemes::theme_clean()
+      
+    ggplotly(p)
   })
   
   output$demo_map <- renderLeaflet({
@@ -149,6 +177,18 @@ server <- function(input, output, session) {
         position = "bottomright",
         title = input$demo_var_selected
     )
+  })
+  
+  output$demo_table <- DT::renderDataTable({
+    
+    dados_censo |> 
+      pivot_longer(cols = PERC_Mulheres:TAXA_Hab_per_Domi) |> 
+      mutate(
+        value = round(value, 2),
+        # value = ifelse(!is.na(value), yes = paste0(value, "%"), no = value)
+      ) |> 
+      pivot_wider(names_from = name, values_from = value)
+    
   })
   
 }
